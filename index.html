@@ -26,16 +26,7 @@
             padding: 20px;
             overflow: hidden;
         }
-
-
-
         /* thay đổi giao diện điện thoại */
-
-
-        
-
-
-        
         .bot-message pre {
     background: #282c34;
     color: #abb2bf;
@@ -48,9 +39,7 @@
     background: #f0f0f0;
     padding: 2px 4px;
     border-radius: 4px;
-}
-
-        
+} 
         #chat-container { 
             width: 100%;
             max-width: 1000px;
@@ -1110,18 +1099,11 @@ body {
     window.sessionId = getOrCreateSessionId();
     const chatBox = document.getElementById('chat-box');
     const userInput = document.getElementById('user-input');
-
-    // URL Webhook n8n của bạn (Đang dùng bản test)
-    // const WEBHOOK_URL = 'http://localhost:5678/webhook-test/chatbot';
-    // const WEBHOOK_URL = 'http://localhost:5678/webhook/chatbot';
-    const WEBHOOK_URL = 'https://hemlock-astute-saturday.ngrok-free.dev/webhook/chatbot';
-
-
+    const WEBHOOK_URL = 'https://hemlock-astute-saturday.ngrok-free.dev/webhook-test/chatbot';
     // Hiện tin nhắn chào hỏi khi trang tải
     window.addEventListener('load', function() {
         appendMessage('Chào mừng bạn đến với HUNRE AI! Tôi có thể giúp gì cho bạn hôm nay?', 'bot');
     });
-
     // 2. HÀM HIỂN THỊ TIN NHẮN LÊN MÀN HÌNH
     function appendMessage(text, sender) {
         const msgDiv = document.createElement('div');
