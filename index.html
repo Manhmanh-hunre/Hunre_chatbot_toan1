@@ -1,0 +1,1717 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot n8n</title>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-image: url('https://truongdaihocvietnam.com/wp-content/uploads/2023/06/HUNRE1.jpg');
+            display: flex;
+            background-size: cover;
+            justify-content: center;
+            background-position: 50% 50%;
+            align-items: center;
+            height: 100vh;
+            padding: 20px;
+            overflow: hidden;
+        }
+
+
+
+        /* thay đổi giao diện điện thoại */
+
+
+        
+
+
+        
+        .bot-message pre {
+    background: #282c34;
+    color: #abb2bf;
+    padding: 10px;
+    border-radius: 8px;
+    overflow-x: auto;
+}
+.bot-message code {
+    font-family: 'Courier New', Courier, monospace;
+    background: #f0f0f0;
+    padding: 2px 4px;
+    border-radius: 4px;
+}
+
+        
+        #chat-container { 
+            width: 100%;
+            max-width: 1000px;
+            height: 90vh;
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            /* margin-right: 50px; */
+        }
+        
+        #chat-header { 
+            background: linear-gradient(135deg,#7bd886 20%,#23d537 50% ,#10af22 100%);
+            color: white;
+            /* padding: 16px 20px; */
+            padding-top: 45px !important;  /* Giảm khoảng cách phía trên */
+            padding-bottom: 20px !important; /* Có thể tăng phía dưới để bù lại */
+            text-align: center;
+            font-weight: 600;
+            position: relative;
+        }
+        
+        #chat-header h1 {
+            font-size: 25px;
+            margin-bottom: 1px;
+            font-weight: 700;
+        }
+        
+        #chat-header p {
+            font-size: 14px;
+            opacity: 0.9;
+            font-weight: 400;
+        }
+        
+        #chat-box { 
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            background: #f5f5f7;
+            align-content: flex-start;
+        }
+        
+        #chat-box::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        #chat-box::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        
+        #chat-box::-webkit-scrollbar-thumb {
+            background: #ddd;
+            border-radius: 3px;
+        }
+        
+        .message { 
+            padding: 12px 16px;
+            border-radius: 18px;
+            word-wrap: break-word;
+            overflow-wrap: break-word;   /* 🔥 cực quan trọng */
+            word-break: break-word;  
+            white-space: pre-wrap;
+            line-height: 1.5;
+            font-size: 14px;
+            display: inline-flex;
+            flex-direction: column;
+            max-width: 80%;
+            width: fit-content;
+            animation: slideIn 0.2s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message p,
+        .message li {
+        margin: 5px 0;
+        word-break: break-word;
+        }
+
+        .message ul {
+        padding-left: 20px;
+        }
+        
+        .user-message {
+            background: linear-gradient(135deg, #10cc2c 100%);
+            color: white;
+            align-self: flex-end;
+            border-radius: 18px;
+            box-shadow: 0 2px 8px rgba(2, 90, 37, 0.3);
+            padding: 10px 16px;
+            max-width: 85%;
+        }
+        
+        /* --- ĐOẠN CSS TỐI ƯU CHO TIN NHẮN BOT (CHUẨN CHUYÊN NGHIỆP) --- */
+        .bot-message { 
+            background: #ffffff;
+            color: #333;
+            align-self: flex-start;
+            border: 2px solid #e8e8e8;
+            border-radius: 18px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+            white-space: normal !important; /* Cho phép tự động xuống dòng chuẩn HTML */
+            line-height: 1.6 !important;      /* Khoảng cách dòng giúp mắt dễ đọc */
+            padding: 12px 16px !important;
+            max-width: 85%;
+            height: auto;
+            overflow-wrap: break-word;
+            word-break: break-word;
+        }
+
+        .bot-message * 
+        {
+        max-width: 100%;
+        }
+
+        /* Sửa lỗi chồng chéo danh sách */
+        .bot-message ul,
+        .bot-message ol {
+            margin: 12px 0 !important;
+            padding-left: 24px !important;  /* Đẩy danh sách vào bên trong khung */
+            display: block !important;
+        }
+
+        .bot-message li {
+            display: list-item !important;  /* Giữ dấu chấm đầu dòng */
+            margin-bottom: 8px !important; /* Khoảng cách giữa các mục */
+            margin-left: 20px !important;      /* Không cạn thêm margin trái (padding-left của ul/ol đã xử lý) */
+            line-height: 1.6 !important;    /* Độ giãn dòng dễ đọc */
+            list-style-position: outside !important;
+            padding-left: 0 !important;
+        }
+
+        /* Không làm tới chấn mục này - đề cho marked.js tự xử lý */
+        .bot-message li p {
+            display: inline !important;     /* Cho phép text bên trong li từ nò dốc */
+            margin: 0 !important;
+            padding: 0 !important;
+            line-height: 1.6 !important;
+        }
+
+        .bot-message li span {
+            display: block !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+
+        .bot-message p {
+            display: block !important;      /* Đối với <p> không phải trong <li> */
+            margin: 8px 0 !important;
+            line-height: 1.6 !important;
+        }
+
+        .bot-message h1,
+        .bot-message h2,
+        .bot-message h3,
+        .bot-message h4,
+        .bot-message h5,
+        .bot-message h6 {
+            margin: 12px 0 8px 0 !important;
+            padding-left: 0 !important;
+            line-height: 1.5 !important;
+        }
+
+        .bot-message blockquote {
+            margin: 10px 0 !important;
+            padding-left: 12px !important;
+            border-left: 3px solid #ddd !important;
+        }
+
+        /* Nâng cấp UX: Hover effect cho danh sách */
+        .bot-message li:hover {
+            background: rgba(16, 204, 44, 0.08) !important;
+            padding-left: 8px !important;
+            padding-right: 4px !important;
+            border-radius: 4px !important;
+            transition: all 0.2s ease !important;
+        }
+
+        /* Cải thiện scrollbar để thanh cuộn mượt mà */
+        #chat-box::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        #chat-box::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        #chat-box::-webkit-scrollbar-thumb {
+            background: #c0c0c0;
+            border-radius: 4px;
+            transition: background 0.3s ease;
+        }
+
+        #chat-box::-webkit-scrollbar-thumb:hover {
+            background: #a0a0a0;
+        }
+        
+        #input-area { 
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-top: 1px solid #e0e0e0;
+            padding: 15px;
+            background: #fff;
+        }
+        
+        #user-input { 
+            flex: 1;
+            padding: 12px 16px;
+            border: 1.5px solid #e0e0e0;
+            border-radius: 25px;
+            outline: none;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        #user-input:focus {
+            border-color: #169e2d;
+        }
+        
+        #user-input::placeholder {
+            color: #999;
+        }
+        
+        #send-btn { 
+            background: linear-gradient(135deg, #03b03a 0%, #32d972 100%);
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 12px rgba(77, 255, 127, 0.4);
+            flex-shrink: 0;
+        }
+        
+        #send-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 16px rgba(102, 126, 234, 0.5);
+        }
+        
+        #send-btn:active {
+            transform: scale(0.95);
+        }
+        /* Layout bao quanh */
+#main-layout {
+    display: flex;
+    width: 100%;      /* Độ rộng tổng thể */
+    max-width: 1500px; 
+    height: 85vh;    /* Chiều cao cố định để không bị lướt trang */
+    gap: 20px;       /* Khoảng cách giữa Sidebar và Chat */
+    align-items: stretch;
+    max-width: 1200px;
+}
+
+/* Sidebar bên trái (Mục tiêu của bạn) */
+#sidebar {
+    flex: 0 0 280px; /* Cố định độ rộng 280px */
+    background: rgba(255, 255, 255, 0.9); /* Màu trắng trong suốt nhẹ */
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+
+/* Nút chat mới */
+.new-chat-btn {
+    background: #28a745; /* Màu xanh giống màu bạn đang dùng */
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: bold;
+    margin-bottom: 20px;
+    transition: 0.3s;
+}
+.new-chat-btn:hover { background: #218838; }
+
+/* Menu tiện ích */
+.menu-utilities {
+    margin-bottom: 20px;
+}
+
+.menu-item {
+    display: flex;
+    align-items: center;
+    padding: 12px 15px;
+    margin: 8px 0;
+    background-color: #ffffff;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.menu-item:hover {
+    background-color: #28a745;
+    color: white;
+    border-color: #28a745;
+}
+
+/* Danh sách lịch sử */
+.history-label {
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+    font-weight: bold;
+}
+
+#history-list {
+    overflow-y: auto; /* Cuộn nếu quá 10 item */
+    flex: 1;
+}
+
+.history-item {
+    padding: 10px;
+    margin-bottom: 5px;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #333;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis; /* Cắt chữ nếu quá dài */
+    transition: 0.2s;
+}
+
+.history-item:hover {
+    background: rgba(40, 167, 69, 0.1); /* Hiệu ứng hover xanh nhạt */
+    color: #28a745;
+}
+
+/* Điều chỉnh lại khung chat cũ cho khớp layout mới */
+#chat-container {
+    flex: 1; /* Tự động rộng ra chiếm phần còn lại */
+    margin-right: 0 !important; /* Xóa margin cũ nếu có */
+    height: 100% !important;   /* Cao bằng main-layout */
+}
+
+/* Đảm bảo body căn giữa cái main-layout */
+body {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.typing-loader {
+    font-style: italic;
+    color: #888;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+    .fixed-branding 
+    {
+    position: fixed; 
+    top: 7px; 
+    left: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 9998; 
+    pointer-events: none; 
+}
+    .fixed-branding img {
+    flex-shrink: 0;        /* Giữ nguyên kích thước logo, không cho nó bị bóp méo */
+}
+
+.branding-text {
+    white-space: nowrap;    /* Lệnh này quan trọng nhất: Cấm xuống dòng */
+    font-size: 13px;        /* Bạn có thể giảm nhỏ size này nếu tên trường dài quá bị tràn màn hình */
+}
+
+
+
+.branding-logo {
+    height: 45px;
+    width: auto;
+}
+
+.branding-text {
+    color: rgb(2, 124, 28);
+    font-size: 18px;
+    font-weight: bold;
+    text-transform: uppercase;
+    text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.8); 
+    white-space: nowrap;
+}
+
+/* ===== HAMBURGER MENU BUTTON ===== */
+.hamburger-btn {
+    display: none !important;
+    position: absolute ;
+    top: 46px !important;
+    left: 15px !important;
+    z-index: 10001 !important;
+    background: white;
+    border: none;
+    width: 30px !important;
+    height: 30px !important;
+    border-radius: 50%;
+    cursor: pointer;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    pointer-events: auto;
+}
+
+.hamburger-btn span {
+    display: block;
+    width: 16px !important;
+    height: 3px !important;
+    background: #28a745;
+    border-radius: 2px;
+    transition: all 0.3s ease;
+}
+
+.hamburger-btn:hover {
+    background: #f0f0f0;
+}
+
+/* Sidebar overlay trên mobile */
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 9998;
+}
+
+.sidebar-overlay.active {
+    display: block;
+}
+
+/* CSS cho bảng lịch thi */
+.exam-schedule-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 10px 0;
+    font-size: 13px ;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.exam-schedule-table thead {
+    background: linear-gradient(135deg, #10af22 0%, #28a745 100%);
+    color: white;
+    font-weight: 700;
+}
+
+.exam-schedule-table th {
+    padding: 12px 8px;
+    text-align: left;
+    border-right: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.exam-schedule-table td {
+    padding: 10px 8px;
+    border-bottom: 1px solid #e0e0e0;
+    color: #333;
+}
+
+.exam-schedule-table tbody tr:hover {
+    background-color: rgba(40, 167, 69, 0.05);
+}
+
+.exam-schedule-table tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.exam-schedule-wrapper {
+    max-height: 400px;
+    overflow-y: auto;
+    border-radius: 8px;
+    margin: 15px 0;
+}
+
+.exam-schedule-wrapper::-webkit-scrollbar {
+    width: 6px;
+}
+
+.exam-schedule-wrapper::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.exam-schedule-wrapper::-webkit-scrollbar-thumb {
+    background: #ddd;
+    border-radius: 3px;
+}
+
+.schedule-header {
+    font-weight: bold;
+    color: #10af22;
+    margin-bottom: 10px;
+    font-size: 14px;
+}
+
+/* CSS cho Lịch học tuần */
+.class-schedule-wrapper {
+    overflow-x: auto;
+    border-radius: 8px;
+    margin: 15px 0;
+}
+
+.class-schedule-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    font-size: 12px;
+}
+
+.class-schedule-table thead {
+    background: linear-gradient(135deg, #10af22 0%, #28a745 100%);
+    color: white;
+    font-weight: 700;
+    position: sticky;
+    top: 0;
+}
+
+.class-schedule-table th {
+    padding: 10px 6px;
+    text-align: center;
+    border-right: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.class-schedule-table td {
+    padding: 8px 6px;
+    border: 1px solid #e0e0e0;
+    text-align: center;
+    vertical-align: top;
+    max-width: 120px;
+}
+
+.class-schedule-table tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.time-slot {
+    font-weight: bold;
+    background: #f0f0f0;
+    min-width: 50px;
+}
+
+.class-item {
+    background: linear-gradient(135deg, #e8f5e9 0%, #f1f8f4 100%);
+    border-left: 3px solid #28a745;
+    padding: 6px;
+    margin: 2px 0;
+    border-radius: 4px;
+    font-size: 11px;
+    line-height: 1.3;
+}
+
+.class-name {
+    font-weight: 600;
+    color: #1b5e20;
+    display: block;
+    margin-bottom: 2px;
+}
+
+.class-time {
+    color: #2e7d32;
+    font-size: 10px;
+}
+
+.class-room {
+    color: #555;
+    font-size: 10px;
+    margin-top: 2px;
+}
+
+/* CSS cho Modal Dialog */
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 9999;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-overlay.active {
+    display: flex;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 12px;
+    padding: 25px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    max-width: 400px;
+    width: 90%;
+    animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.modal-header {
+    font-size: 18px;
+    font-weight: bold;
+    color: #1b5e20;
+    margin-bottom: 15px;
+    border-bottom: 2px solid #28a745;
+    padding-bottom: 10px;
+}
+
+.modal-body {
+    font-size: 14px;
+    color: #333;
+    line-height: 1.8;
+}
+
+.modal-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.modal-icon {
+    font-size: 18px;
+    color: #28a745;
+    min-width: 24px;
+    text-align: center;
+}
+
+.modal-label {
+    font-weight: 600;
+    color: #1b5e20;
+    min-width: 70px;
+}
+
+.modal-close {
+    float: right;
+    font-size: 24px;
+    font-weight: bold;
+    color: #999;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: 0.3s;
+}
+
+.modal-close:hover {
+    background: #f0f0f0;
+    color: #333;
+}
+
+.class-item-clickable {
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.class-item-clickable:hover {
+    background: linear-gradient(135deg, #d4edda 0%, #e8f5e9 100%) !important;
+    transform: scale(1.05);
+}
+
+/* ===== RESPONSIVE MOBILE ===== */
+@media (max-width: 768px) {
+    
+    
+    body {
+        padding: 0;
+        height: 100vh;
+    }
+
+    .fixed-branding {
+    
+    display: flex;
+    align-items: center;    /* Quan trọng: Căn logo và chữ thẳng hàng dọc */
+    gap: 10px;              /* Khoảng cách giữa logo và chữ */
+    
+    /* Để di chuyển cả cụm này */
+    position: absolute;     
+    top: 10px;              /* Chỉnh khoảng cách so với mép trên */
+    left: 15px;
+    }
+
+    .branding-logo {
+        height: 40px;
+    }
+
+    .branding-text {
+        font-size: 14px;
+        white-space: normal;
+        max-width: 360px;
+        overflow: visible;
+        text-overflow: clip;
+        line-height: 1.2;
+        word-wrap: break-word;
+    }
+
+    .hamburger-btn {
+    display: flex !important;
+    position: absolute ;
+    top: 46px !important;
+    left: 15px !important;
+    z-index: 9999 !important;
+    background: white;
+    border: none;
+    width: 30px !important;
+    height: 30px !important;
+    border-radius: 50%;
+    cursor: pointer;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    pointer-events: auto;
+    }
+
+    .hamburger-btn span {
+        width: 18px;
+        height: 2.5px;
+    }
+
+    #main-layout {
+        flex-direction: column;
+        height: 100vh;
+        gap: 0;
+    }
+
+    #sidebar {
+    flex: 0 0 280px; /* Cố định độ rộng 280px */
+    background: rgba(255, 255, 255, 0.9); /* Màu trắng trong suốt nhẹ */
+    backdrop-filter: blur(10px);
+    border-radius: 0 20px 20px 0 !important;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    /* box-shadow: 0 10px 30px rgba(0,0,0,0.1); */
+    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.15) !important;
+    overflow: hidden;
+    position: fixed !important;
+        top: 0 !important; /* Điều chỉnh khoảng cách từ trên xuống */
+        left: 0px !important;  /* Điều chỉnh khoảng cách từ trái sang */
+        height: 100vh !important; /* Chiều cao cố định để không bị lướt trang */
+        width: 370px !important; /* Độ rộng cố định */
+        z-index: 10000 !important;      /* Số cực lớn để nó đè lên logo và tên trường */
+        transform: translateX(-100%); /* Đẩy toàn bộ sidebar sang trái để ẩn đi */
+        transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1) !important; /* Tạo hiệu ứng trượt mượt mà */
+        left: 0 !important;
+        top: 0 !important;
+    }
+
+    #sidebar.active {
+        transform: translateX(0) !important;
+    }
+
+    #chat-container {
+        flex: 1;
+        max-width: 100%;
+        width: 100%;
+        height: 100%;
+        border-radius: 0;
+        margin: 0;
+        padding: 0;
+    }
+
+    #chat-header {
+        padding: 120px 0 12px 0;
+        text-align: center;
+        position: relative;
+    }
+
+    #chat-header h1 {
+        font-size: 25px !important;
+        margin-bottom: 4px;
+    }
+
+    #chat-header p {
+        font-size: 12px;
+        padding: 0 12px;
+        line-height: 1.4;
+    }
+
+    #chat-box {
+        padding: 13px;
+        gap: 8px;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .message {
+        max-width: 92%;
+        font-size: 15px !important;
+        display: inline-flex;
+        flex-direction: column;
+        width: fit-content;
+    }
+
+    .user-message {
+        align-self: flex-end;
+    }
+
+    .bot-message {
+        /* align-self: flex-start; */
+    max-width: 95% !important;
+    width: 95% !important; 
+    }
+
+    #input-area {
+        padding: 10.8px 7.2px;
+        gap: 10.8px;
+        margin-bottom: 0;
+        border-left: none;
+        border-right: none;
+    }
+
+    #user-input {
+        padding: 13.5px 16.2px;
+        font-size: 17.1px;
+        border-radius: 30px;
+    }
+
+    #send-btn {
+        width: 48.6px;
+        height: 48.6px;
+        font-size: 21.6px;
+        flex-shrink: 0;
+    }
+    .top-bar {
+    background: #f8f9fa;
+    font-size: 10px;        /* Bạn có thể tăng lên 11px nếu muốn */
+    font-weight: bold;
+    text-align: center;
+    padding: 5px 10px;
+    width: 100%;
+    border-bottom: 1px solid #eee;
+    
+    /* CÁC DÒNG QUAN TRỌNG ĐỂ THÀNH 1 DÒNG */
+    white-space: nowrap;    /* Không cho phép xuống dòng */
+    overflow: hidden;       /* Ẩn phần thừa nếu màn hình quá nhỏ */
+    display: block;         /* Đảm bảo nó chiếm hết chiều ngang */
+   }
+
+    /* Bắt đầu code sửa bảng - CHỈ CHẠY TRÊN MOBILE */
+    .table-responsive {
+        width: 100%;
+        overflow-x: auto; /* Cho phép vuốt ngang */
+        -webkit-overflow-scrolling: touch; /* Vuốt mượt trên iPhone */
+        margin: 10px 0;
+        border: 1px solid #eee;
+        border-radius: 8px;
+    }
+
+    .table-responsive table {
+        /* min-width: 600px !important; //Ép bảng rộng ra để không bị dồn chữ
+        width: auto;  */
+        width: max-content !important; /* Bảng tự rộng theo nội dung */
+        min-width: 800px !important;  /* Độ rộng tối thiểu để không bị tràn chữ */
+        display: table !important;
+        border-collapse: collapse !important;
+        table-layout: auto !important; /* Tự động giãn ô theo chữ */
+
+    }
+
+    .table-responsive th, 
+    .table-responsive td {
+        /* white-space: nowrap !important; //Chữ nằm trên 1 dòng, không bị đè lên nhau 
+        font-size: 13px;
+        padding: 8px 12px; */
+
+        white-space: normal !important; /* Cho phép xuống dòng nếu cần */
+        word-wrap: break-word !important;
+        padding: 8px 5px !important;
+        font-size: 12px !important;
+        min-width: 100px; /* Đảm bảo ô đủ to để chứa nội dung */
+        vertical-align: middle;
+
+    }
+
+    .class-item {
+        width: 100% !important;
+        box-sizing: border-box;
+        margin: 2px 0;
+        padding: 4px !important;
+    }
+
+}
+
+@media (max-width: 480px) {
+    .branding-logo {
+        height: 30px;
+    }
+
+    .branding-text {
+        font-size: 11px;
+        max-width: 150px;
+    }
+
+    #sidebar {
+        width: 75vw;
+        left: -75vw;
+    }
+
+    #chat-header h1 {
+        font-size: 16px;
+    }
+
+    #chat-header p {
+        font-size: 11px;
+    }
+
+    .message {
+        max-width: 88%;
+        font-size: 14px;
+        display: inline-flex;
+        flex-direction: column;
+        width: fit-content;
+    }
+
+    .user-message {
+        align-self: flex-end;
+    }
+
+    .bot-message {
+        align-self: flex-start;
+        width: 95% !important;
+        max-width: 95% !important;
+    }
+}
+
+    </style>
+</head>
+<body>
+
+
+<div class="fixed-branding">
+    <img src="https://upload.wikimedia.org/wikipedia/commons/4/4e/HUNRE_Logo.png" alt="Logo" class="branding-logo">
+    <span class="branding-text" style="white-space: nowrap;" >TRƯỜNG ĐẠI HỌC TÀI NGUYÊN VÀ MÔI TRƯỜNG HÀ NỘI</span>
+</div>
+
+
+<div id="main-layout">
+    
+    <div id="sidebar">
+        <button class="new-chat-btn"   id="new-chat-btn"     >+ Đoạn chat mới</button>
+        
+        <!-- Menu tiện ích -->
+        <div class="menu-utilities">
+            <div class="menu-item" onclick="showContent('TKB')">Thời khóa biểu</div>
+            <div class="menu-item" onclick="showContent('LICH_THI')">Lịch thi</div>
+            <div class="menu-item" onclick="showContent('DIEM')">Tra cứu điểm thi</div>
+        </div>
+        
+        <hr>
+        
+        <div class="history-label">Gần đây</div>
+        <div id="history-list">
+            <div class="history-item">Lịch sử trò chuyện 1</div>
+            <div class="history-item">Lịch sử trò chuyện 2</div>
+            <div class="history-item">Lịch sử trò chuyện 3</div>
+            <div class="history-item">Lịch sử trò chuyện 4</div>
+            <div class="history-item">Lịch sử trò chuyện 5</div>
+            <div class="history-item">Lịch sử trò chuyện 6</div>
+            <div class="history-item">Lịch sử trò chuyện 7</div>
+            <div class="history-item">Lịch sử trò chuyện 8</div>
+            <div class="history-item">Lịch sử trò chuyện 9</div>
+            <div class="history-item">Lịch sử trò chuyện 10</div>
+        </div>
+    </div>
+
+
+
+<div id="chat-container">
+    <div id="chat-header">
+        <button class="hamburger-btn" id="hamburger-btn">
+            <span></span>
+            <span></span>
+            <span></span>
+        </button>
+        <h1> HUNRE AI</h1>
+        <p>Cố vấn học tập ảo của trường Đại học Tài nguyên và Môi trường Hà Nội</p>
+    </div>
+    <div id="chat-box">
+    </div>
+    <div id="input-area">
+        <input type="text" id="user-input" placeholder="Nhập tin nhắn của bạn..." onkeypress="handleKeyPress(event)">
+        <button id="send-btn" onclick="sendMessage()">➤</button>
+    </div>
+</div>
+
+<div class="sidebar-overlay" id="sidebar-overlay"></div>
+
+<script>
+    // 1. HÀM TẠO VÀ LẤY SESSION ID
+    // Hàm này kiểm tra xem người dùng đã có ID chưa, nếu chưa thì tạo mới và lưu vào localStorage
+    function getOrCreateSessionId() {
+        let sessionId = localStorage.getItem('n8n_chat_session_id');
+        if (!sessionId) {
+            // Tạo một ID ngẫu nhiên (VD: user_8fk3j9sn)
+            sessionId = 'user_' + Math.random().toString(36).substring(2, 10);
+            localStorage.setItem('n8n_chat_session_id', sessionId);
+        }
+        return sessionId;
+    }
+
+    // const sessionId = getOrCreateSessionId();
+    window.sessionId = getOrCreateSessionId();
+    const chatBox = document.getElementById('chat-box');
+    const userInput = document.getElementById('user-input');
+
+    // URL Webhook n8n của bạn (Đang dùng bản test)
+    // const WEBHOOK_URL = 'http://localhost:5678/webhook-test/chatbot';
+    // const WEBHOOK_URL = 'http://localhost:5678/webhook/chatbot';
+    const WEBHOOK_URL = 'https://hemlock-astute-saturday.ngrok-free.dev/webhook/chatbot';
+
+
+    // Hiện tin nhắn chào hỏi khi trang tải
+    window.addEventListener('load', function() {
+        appendMessage('Chào mừng bạn đến với HUNRE AI! Tôi có thể giúp gì cho bạn hôm nay?', 'bot');
+    });
+
+    // 2. HÀM HIỂN THỊ TIN NHẮN LÊN MÀN HÌNH
+    function appendMessage(text, sender) {
+        const msgDiv = document.createElement('div');
+        msgDiv.classList.add('message');
+        msgDiv.classList.add(sender === 'user' ? 'user-message' : 'bot-message');
+        /* msgDiv.innerHTML = marked.parse(text); */
+        if (typeof marked !== 'undefined') {
+    msgDiv.innerHTML = marked.parse(text);
+} else {
+    msgDiv.innerText = text;
+}
+        chatBox.appendChild(msgDiv);
+        chatBox.scrollTop = chatBox.scrollHeight; // Tự động cuộn xuống cuối
+    }
+
+    // Xử lý khi nhấn Enter
+    function handleKeyPress(event) {
+        if (event.key === 'Enter') {
+            sendMessage();
+        }
+    }
+
+
+    async function sendMessage() {
+    const text = userInput.value.trim();
+    if (!text) return;
+
+    // 1. Hiện tin nhắn của người dùng
+    appendMessage(text, 'user');
+    userInput.value = '';
+
+    // 2. Hiện tin nhắn "Đang suy nghĩ..." tạm thời
+    const tempMessageId = 'loading-' + Date.now(); // Tạo một ID duy nhất
+    const loadingDiv = document.createElement('div');
+    loadingDiv.classList.add('message', 'bot-message', 'typing-loader');
+    loadingDiv.id = tempMessageId;
+    loadingDiv.innerText = 'HUNRE AI đang suy nghĩ';
+    chatBox.appendChild(loadingDiv);
+    chatBox.scrollTop = chatBox.scrollHeight;
+
+    try {
+        // Gửi request lên Webhook n8n
+        const response = await fetch(WEBHOOK_URL, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                message: text,
+                sessionId: window.sessionId,
+                executionMode: "test"
+            })
+        });
+
+        const data = await response.json();
+        const botReply = data.reply || data.output || data.response || data.text || JSON.stringify(data);
+
+        const loadingElement = document.getElementById(tempMessageId);
+        if (loadingElement) {
+            loadingElement.classList.remove('typing-loader');
+            loadingElement.innerHTML = '';
+
+            let i = 0;
+            const speed = 15;
+
+            // function typeWriter() {
+            //     if (i < botReply.length) {
+            //         let currentText = botReply.substring(0, i + 1); 
+            //         loadingElement.innerText = currentText;
+            //         loadingElement.innerHTML = marked.parse(currentText);
+            //         i++;
+            //         chatBox.scrollTop = chatBox.scrollHeight;
+            //         setTimeout(typeWriter, 15);
+            //     }
+            // }
+
+            function typeWriter() {
+            if (i < botReply.length) {
+            let currentText = botReply.substring(0, i + 1); 
+            loadingElement.innerText = currentText; //  không dùng marked ở đây
+            i++;
+            chatBox.scrollTop = chatBox.scrollHeight;
+            setTimeout(typeWriter, 15);
+            } else {
+            //  Khi xong mới render markdown
+            loadingElement.innerHTML = marked.parse(botReply);
+            }
+            }
+            typeWriter();
+            }
+
+    } catch (error) {
+        console.error('Lỗi khi gọi API n8n:', error);
+        const loadingElement = document.getElementById(tempMessageId);
+        if (loadingElement) {
+            loadingElement.innerText = 'Xin lỗi, hệ thống đang gặp sự cố kết nối.';
+            loadingElement.style.color = 'red';
+        }
+    }
+}
+
+
+
+
+// Khai báo nút và hàm Reset Chat
+const newChatBtn = document.getElementById('new-chat-btn');
+
+// Định nghĩa hàm Reset Chat
+function startNewChat() {
+        
+    // Làm sạch màn hình chat
+    const chatBox = document.getElementById('chat-box');
+    chatBox.innerHTML = ''; // Xóa hết các thẻ div tin nhắn cũ
+
+    // Tạo Session ID mới
+    localStorage.removeItem('n8n_chat_session_id');
+    
+    window.sessionId = 'user_' + Math.random().toString(36).substring(2, 10);
+    localStorage.setItem('n8n_chat_session_id', window.sessionId);
+
+    // Hiển thị lời chào khởi đầu
+    appendMessage('Chào mừng bạn đến với HUNRE AI! Tôi đã sẵn sàng cho cuộc trò chuyện mới.', 'bot');
+    
+    console.log("Đã reset session mới: " + window.sessionId);
+}
+
+// Gán sự kiện click cho nút
+newChatBtn.addEventListener('click', startNewChat);
+
+// ===== HAMBURGER MENU - MOBILE =====
+const hamburgerBtn = document.getElementById('hamburger-btn');
+const sidebar = document.getElementById('sidebar');
+const sidebarOverlay = document.getElementById('sidebar-overlay');
+
+// Mở sidebar
+hamburgerBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    sidebar.classList.add('active');
+    sidebarOverlay.classList.add('active');
+});
+
+// Đóng sidebar khi click vào overlay
+sidebarOverlay.addEventListener('click', function() {
+    sidebar.classList.remove('active');
+    sidebarOverlay.classList.remove('active');
+});
+
+// Đóng sidebar khi click vào menu items
+const menuItems = document.querySelectorAll('.menu-item, .history-item');
+menuItems.forEach(item => {
+    item.addEventListener('click', function() {
+        sidebar.classList.remove('active');
+        sidebarOverlay.classList.remove('active');
+    });
+});
+
+// Đóng sidebar khi bấm nút "Đoạn chat mới"
+const newChatBtnMobile = document.getElementById('new-chat-btn');
+newChatBtnMobile.addEventListener('click', function() {
+    sidebar.classList.remove('active');
+    sidebarOverlay.classList.remove('active');
+});
+
+// ============ LỊCH THI ============
+// Dữ liệu lịch thi
+const examScheduleData = [
+    {
+        stt: 1,
+        maHP: 'LCT101',
+        tenHP: 'Tư tưởng Hồ Chí Minh',
+        lan: 1,
+        ngayThi: '26/05/2026',
+        gioThi: '17:30 - 18:30',
+        hinhThuc: 'Tự luận (60 phút)',
+        phongThi: 'A.103',
+        baoDanh: 44
+    },
+    {
+        stt: 2,
+        maHP: 'CTKU104',
+        tenHP: 'Phân tích thiết kế hệ thống thông tin',
+        lan: 1,
+        ngayThi: '21/05/2026',
+        gioThi: '13:30 - 15:00',
+        hinhThuc: 'Bài tập lớn',
+        phongThi: 'A.301',
+        baoDanh: 55
+    },
+    {
+        stt: 3,
+        maHP: 'CTKU105',
+        tenHP: 'Phát triển hệ thống thông tin dựa lý',
+        lan: 1,
+        ngayThi: '20/05/2026',
+        gioThi: '08:00 - 09:30',
+        hinhThuc: 'Thực hành',
+        phongThi: 'A.701 (K CNTT)',
+        baoDanh: 11
+    },
+    {
+        stt: 4,
+        maHP: 'CTKM105',
+        tenHP: 'Mạng máy tính',
+        lan: 1,
+        ngayThi: '19/05/2026',
+        gioThi: '08:00 - 09:30',
+        hinhThuc: 'Trắc Nghiệm',
+        phongThi: 'A.701 (K CNTT)',
+        baoDanh: 11
+    },
+    {
+        stt: 5,
+        maHP: 'CTKM104',
+        tenHP: 'Lập trình hướng đối tượng',
+        lan: 1,
+        ngayThi: '18/05/2026',
+        gioThi: '13:30 - 15:00',
+        hinhThuc: 'Thực hành',
+        phongThi: 'A.701 (K CNTT)',
+        baoDanh: 11
+    },
+    {
+        stt: 6,
+        maHP: 'GTGP106',
+        tenHP: 'Giáo dục thể chất 4 - Cầu lông',
+        lan: 1,
+        ngayThi: '22/04/2026',
+        gioThi: '08:00 - 09:30',
+        hinhThuc: 'Thực hành',
+        phongThi: '(0,6)',
+        baoDanh: 458
+    }
+];
+
+// ============ LỊCH HỌC TUẦN ============
+// Dữ liệu lịch học theo tuần (Sáng/Chiều)
+const classScheduleData = {
+    'Thứ 2': {
+        'Sáng': [],
+        'Chiều': [
+            { name: 'Từ tưởng Hồ Chí Minh', time: '15:20-17:10', room: 'A1008', teacher: 'Đào duy khánh' }
+        ]
+    },
+    'Thứ 3': {
+        'Sáng': [
+            { name: 'Giáo dục thể chất 4 - Cầu lông', time: '07:00-10:40', room: 'Sân CS1', teacher: 'Nguyễn Hồng Thắm' }
+        ],
+        'Chiều': [
+            { name: 'Lập trình hướng đối tượng', time: '12:30-16:10', room: 'A706 (K CNTT)', teacher: 'Trịnh Thị Lý' }
+        ]
+    },
+    'Thứ 4': {
+        'Sáng': [],
+        'Chiều': [
+            { name: 'Phân tích thiết kế hệ thống thông tin', time: '12:30-16:10', room: 'A706 (K CNTT)', teacher: 'Đào Phương Anh' }
+        ]
+    },
+    'Thứ 5': {
+        'Sáng': [],
+        'Chiều': [
+            { name: 'Mạng máy tính', time: '12:30-16:10', room: 'A706 (K CNTT)', teacher: 'Trịnh Thị Lý' }
+        ]
+    },
+    'Thứ 6': {
+        'Sáng': [],
+        'Chiều': [
+            { name: 'Phân tích hệ thống thông tin địa lý', time: '12:30-16:10', room: 'A706 (K CNTT)', teacher: 'Đỗ Thị Nụ' }
+        ]
+    },
+    'Thứ 7': {
+        'Sáng': [],
+        'Chiều': []
+    },
+    'Chủ nhật': {
+        'Sáng': [],
+        'Chiều': []
+    }
+};
+
+// Hàm hiển thị lịch học
+function displayClassSchedule() {
+    // let html = '<div class="schedule-header">LỊCH HỌC TUẦN</div>';
+    let html = '<div class="schedule-header">LỊCH HỌC TUẦN</div>';
+    // Giữ nguyên wrapper cũ của bạn nếu cần, nhưng phải thêm table-responsive ở đây
+    html += '<div class="table-responsive"><table class="class-schedule-table">';
+    // html += '<div class="class-schedule-wrapper">';
+    
+    const days = ['Thứ 2', 'Thứ 3', 'Thứ 4', 'Thứ 5', 'Thứ 6', 'Thứ 7', 'Chủ nhật'];
+    const sessions = ['Sáng', 'Chiều'];
+    
+    // Bảng
+    // html += '<table class="class-schedule-table">';
+    
+    // Header - Dòng tiêu đề các thứ
+    html += '<thead><tr><th style="width: 60px;">Buổi</th>';
+    days.forEach(day => {
+        html += `<th>${day}</th>`;
+    });
+    html += '</tr></thead>';
+    
+    // Body - Dòng Sáng và Chiều
+    html += '<tbody>';
+    sessions.forEach(session => {
+        html += '<tr>';
+        html += `<td class="time-slot" style="font-weight: bold; background: ${session === 'Sáng' ? '#e8f5e9' : '#fff3e0'};">${session}</td>`;
+        
+        days.forEach(day => {
+            html += '<td>';
+            
+            const daySchedule = classScheduleData[day][session] || [];
+            
+            daySchedule.forEach((classItem, index) => {
+                const classId = `cls_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                // Lưu trữ thông tin lớp học trong window object
+                window[classId] = classItem;
+                html += `<div class="class-item class-item-clickable" onclick="showClassDetailModal('${classId}')">
+                    <span class="class-name">${classItem.name}</span>
+                </div>`;
+            });
+            
+            html += '</td>';
+        });
+        html += '</tr>';
+    });
+    
+    html += '</tbody>';
+    html += '</table>';
+    // html += '</div>';
+    html += '</table></div>';
+    
+    // Hiển thị bảng trong chat box
+    const msgDiv = document.createElement('div');
+    msgDiv.classList.add('message', 'bot-message');
+    msgDiv.innerHTML = html;
+    chatBox.appendChild(msgDiv);
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+// Hàm hiển thị modal chi tiết
+function showClassDetailModal(classId) {
+    const classItem = window[classId];
+    if (!classItem) return;
+    
+    let modalHTML = `<div class="modal-header">${classItem.name}</div>`;
+    modalHTML += '<div class="modal-body">';
+    modalHTML += `<div class="modal-item">
+        <span class="modal-icon"></span>
+        <span><span class="modal-label">Ca:</span> ${classItem.time}</span>
+    </div>`;
+    modalHTML += `<div class="modal-item">
+        <span class="modal-icon"></span>
+        <span><span class="modal-label">Phòng:</span> ${classItem.room}</span>
+    </div>`;
+    modalHTML += `<div class="modal-item">
+        <span class="modal-icon"></span>
+        <span><span class="modal-label">GV:</span> ${classItem.teacher}</span>
+    </div>`;
+    modalHTML += '</div>';
+    
+    // Tìm hoặc tạo modal trên document
+    let modal = document.getElementById('class-modal');
+    if (!modal) {
+        modal = document.createElement('div');
+        modal.id = 'class-modal';
+        modal.className = 'modal-overlay';
+        modal.innerHTML = `<div class="modal-content">
+            <button class="modal-close" onclick="closeClassModal()">×</button>
+            <div id="modal-body-content"></div>
+        </div>`;
+        document.body.appendChild(modal);
+    }
+    
+    modal.querySelector('#modal-body-content').innerHTML = modalHTML;
+    modal.classList.add('active');
+}
+
+// Hàm đóng modal
+function closeClassModal() {
+    const modal = document.getElementById('class-modal');
+    if (modal) {
+        modal.classList.remove('active');
+    }
+}
+
+// Đóng modal khi click ngoài
+document.addEventListener('click', function(event) {
+    const modal = document.getElementById('class-modal');
+    if (modal && event.target === modal) {
+        modal.classList.remove('active');
+    }
+});
+
+// Hàm hiển thị chi tiết môn học
+function showClassDetail(classItem) {
+    // Hàm cũ - không cần dùng nữa
+}
+
+// Hàm hiển thị lịch thi
+function displayExamSchedule() {
+    let tableHTML = '<h3 style="text-align: center; margin-bottom: 10px;">Lịch thi cá nhân</h3>';
+
+    // let tableHTML = '<div class="schedule-header">LỊCH THI CÁ NHÂN</div>';
+    // tableHTML += '<div class="exam-schedule-wrapper">';
+    tableHTML += '<div class="table-responsive"><table class="exam-schedule-table">';
+    // tableHTML += '<table class="exam-schedule-table">';
+    tableHTML += '<thead><tr>';
+    tableHTML += '<th>STT</th>';
+    tableHTML += '<th>Mã HP</th>';
+    tableHTML += '<th>Tên học phần</th>';
+    tableHTML += '<th>Lần</th>';
+    tableHTML += '<th>Ngày thi</th>';
+    tableHTML += '<th>Giờ thi</th>';
+    tableHTML += '<th>Hình thức</th>';
+    tableHTML += '<th>Phòng thi</th>';
+    tableHTML += '<th>Báo danh</th>';
+    tableHTML += '</tr></thead>';
+    tableHTML += '<tbody>';
+    
+    examScheduleData.forEach(exam => {
+        tableHTML += '<tr>';
+        tableHTML += `<td>${exam.stt}</td>`;
+        tableHTML += `<td><strong>${exam.maHP}</strong></td>`;
+        tableHTML += `<td>${exam.tenHP}</td>`;
+        tableHTML += `<td>${exam.lan}</td>`;
+        tableHTML += `<td>${exam.ngayThi}</td>`;
+        tableHTML += `<td>${exam.gioThi}</td>`;
+        tableHTML += `<td>${exam.hinhThuc}</td>`;
+        tableHTML += `<td>${exam.phongThi}</td>`;
+        tableHTML += `<td>${exam.baoDanh}</td>`;
+        tableHTML += '</tr>';
+    });
+    
+    tableHTML += '</tbody>';
+    tableHTML += '</table>';
+    // tableHTML += '</div>';
+    tableHTML += '</table></div>';
+    
+    
+    // Hiển thị bảng trong chat box
+    const msgDiv = document.createElement('div');
+    msgDiv.classList.add('message', 'bot-message');
+    msgDiv.innerHTML = tableHTML;
+    chatBox.appendChild(msgDiv);
+    chatBox.scrollTop = chatBox.scrollHeight;
+    
+}
+
+// ============ BẢNG ĐIỂM ============
+
+// Dữ liệu bảng điểm
+
+const gradeData = [
+    {
+        stt: 1,
+        maHP: 'GNT1',
+        tenHP: 'Giáo dục thể chất 1 - Thể dục',
+        tinChi: 1,
+        lanHoc: 1,
+        lanThi: 1,
+        diemHe10: 7.8,
+        diemHe4: 3,
+        diemChu: 'B',
+        danhGia: 'Đạt'
+    },
+    {
+        stt: 2,
+        maHP: 'LCPL101',
+        tenHP: 'Pháp luật đại cương',
+        tinChi: 2,
+        lanHoc: 1,
+        lanThi: 1,
+        diemHe10: 8.4,
+        diemHe4: 3.5,
+        diemChu: 'B+',
+        danhGia: 'Đạt'
+    },
+    {
+        stt: 3,
+        maHP: 'NNT164',
+        tenHP: 'Tiếng Anh 1',
+        tinChi: 3,
+        lanHoc: 1,
+        lanThi: 1,
+        diemHe10: 8.5,
+        diemHe4: 4,
+        diemChu: 'A',
+        danhGia: 'Đạt'
+    },
+    {
+        stt: 4,
+        maHP: 'CTKM101',
+        tenHP: 'Tin học cơ sở',
+        tinChi: 3,
+        lanHoc: 1,
+        lanThi: 1,
+        diemHe10: 8.4,
+        diemHe4: 3.5,
+        diemChu: 'B+',
+        danhGia: 'Đạt'
+    },
+    {
+        stt: 5,
+        maHP: 'KDTO113',
+        tenHP: 'Toán ứng dụng 1',
+        tinChi: 3,
+        lanHoc: 1,
+        lanThi: 1,
+        diemHe10: 9.8,
+        diemHe4: 4,
+        diemChu: 'A',
+        danhGia: 'Đạt'
+    },
+    {
+        stt: 6,
+        maHP: 'LCML101',
+        tenHP: 'Triết học Mác-Lênin',
+        tinChi: 3,
+        lanHoc: 1,
+        lanThi: 1,
+        diemHe10: 8.9,
+        diemHe4: 4,
+        diemChu: 'A',
+        danhGia: 'Đạt'
+    }
+];
+
+// Hàm hiển thị bảng điểm
+function displayGradeTable() {
+    
+    // let tableHTML = '<div class="schedule-header">BẢNG ĐIỂM CÁ NHÂN</div>';
+    let tableHTML = '<div class="schedule-header">BẢNG ĐIỂM CÁ NHÂN</div>';
+    // tableHTML += '<div class="exam-schedule-wrapper">';
+    tableHTML += '<div class="table-responsive"><table class="exam-schedule-table">';
+    // tableHTML += '<table class="exam-schedule-table">';
+    tableHTML += '<thead><tr>';
+    tableHTML += '<th>STT</th>';
+    tableHTML += '<th>Mã HP</th>';
+    tableHTML += '<th>Tên học phần</th>';
+    tableHTML += '<th>Số tín chỉ</th>';
+    tableHTML += '<th>Lần học</th>';
+    tableHTML += '<th>Lần thi</th>';
+    tableHTML += '<th>Điểm hệ 10</th>';
+    tableHTML += '<th>Điểm hệ 4</th>';
+    tableHTML += '<th>Điểm chữ</th>';
+    tableHTML += '<th>Đánh giá</th>';
+    tableHTML += '</tr></thead>';
+    tableHTML += '<tbody>';
+    
+    gradeData.forEach(grade => {
+        tableHTML += '<tr>';
+        tableHTML += `<td>${grade.stt}</td>`;
+        tableHTML += `<td><strong>${grade.maHP}</strong></td>`;
+        tableHTML += `<td>${grade.tenHP}</td>`;
+        tableHTML += `<td>${grade.tinChi}</td>`;
+        tableHTML += `<td>${grade.lanHoc}</td>`;
+        tableHTML += `<td>${grade.lanThi}</td>`;
+        tableHTML += `<td>${grade.diemHe10}</td>`;
+        tableHTML += `<td>${grade.diemHe4}</td>`;
+        tableHTML += `<td>${grade.diemChu}</td>`;
+        tableHTML += `<td>${grade.danhGia}</td>`;
+        tableHTML += '</tr>';
+    });
+    
+    tableHTML += '</tbody>';
+    tableHTML += '</table>';
+    // tableHTML += '</div>';
+    tableHTML += '</table></div>';
+    
+    // Hiển thị bảng trong chat box
+    const msgDiv = document.createElement('div');
+    msgDiv.classList.add('message', 'bot-message');
+    msgDiv.innerHTML = tableHTML;
+    chatBox.appendChild(msgDiv);
+    chatBox.scrollTop = chatBox.scrollHeight;
+}
+
+// Hàm xử lý menu
+function showContent(type) {
+    if (type === 'TKB') {
+        // Hiển thị lịch học trong chat box
+        displayClassSchedule();
+    } 
+    else if (type === 'LICH_THI') {
+        // Hiển thị lịch thi trong chat box
+        displayExamSchedule();
+    } 
+    else if (type === 'DIEM') {
+        // Hiển thị bảng điểm trong chat box
+        displayGradeTable();
+    }
+}
+
+</script>
+</body>
+</html>
