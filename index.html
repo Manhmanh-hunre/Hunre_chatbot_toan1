@@ -1096,8 +1096,13 @@ body {
     window.sessionId = getOrCreateSessionId();
     const chatBox = document.getElementById('chat-box');
     const userInput = document.getElementById('user-input');
-    // const WEBHOOK_URL = 'https://outtakes-tidings-unfixable.ngrok-free.dev/webhook-test/chatbot';
-    const WEBHOOK_URL = 'https://hemlock-astute-saturday.ngrok-free.dev/webhook/chatbot';
+    userInput.addEventListener('paste', function(e) {
+    e.preventDefault(); // Chặn dán kèm định dạng HTML (gây lỗi gõ chữ)
+    const text = (e.originalEvent || e).clipboardData.getData('text/plain'); // Chỉ lấy chữ thuần
+    document.execCommand('insertText', false, text); // Chèn chữ vào khung
+    });
+    const WEBHOOK_URL = 'https://outtakes-tidings-unfixable.ngrok-free.dev/webhook-test/chatbot';
+    // const WEBHOOK_URL = 'https://hemlock-astute-saturday.ngrok-free.dev/webhook/chatbot';
     // const WEBHOOK_URL = 'http://localhost:5678/webhook/chatbot';
     // const WEBHOOK_URL = 'http://localhost:5678/webhook-test/chatbot';
     // Hiện tin nhắn chào hỏi khi trang tải
